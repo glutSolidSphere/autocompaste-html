@@ -124,12 +124,6 @@ AutoComPaste.Interface = (function () {
                               rows: 10,
                               cols: 40
                             });
-		var acp_textarea1 = $(document.createElement('textarea'))
-                            .addClass('autocompaste-textarea1')
-                            .attr({
-                              rows: 10,
-                              cols: 40
-                            });
 
         //  For ACP mode, engine is passed into the interface. 
         //  Initialize the interface with the engine.
@@ -141,13 +135,11 @@ AutoComPaste.Interface = (function () {
             }
           }
           acp_textarea.autocompaste(privates.engine);
-		  acp_textarea1.autocompaste(privates.engine);
         }
 
         privates.wm.createWindow("text_editor");
         privates.wm.setWindowTitle("text_editor", "Text Editor");
         privates.wm.setWindowContent('text_editor', acp_textarea);
-		privates.wm.setWindowContent('text_editor', acp_textarea1);
         acp_textarea.focus();
 
         // Dispatch an event.
