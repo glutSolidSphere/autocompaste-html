@@ -603,7 +603,6 @@ AutoComPaste.Editor = (function () {
 
     /** Private variables */
     privates.textarea = $(textarea.childNodes[0])[0];
-	console.log (privates.textarea);
     privates.engine = engine;
 
     privates.clist_max_width = 300;
