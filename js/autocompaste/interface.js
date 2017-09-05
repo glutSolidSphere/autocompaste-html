@@ -118,7 +118,8 @@ AutoComPaste.Interface = (function () {
         }
 
         // Create a text editor window.
-        var acp_textarea = $(document.createElement('textarea'))
+        var acp_textarea = $(document.createElement('div'))
+							.append(document.createElement('textarea'))
                             .addClass('autocompaste-textarea')
                             .attr({
                               rows: 10,
