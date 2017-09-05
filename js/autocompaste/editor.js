@@ -602,7 +602,7 @@ AutoComPaste.Editor = (function () {
     };
 
     /** Private variables */
-    privates.textarea = textarea.childNodes[0];
+    privates.textarea = $(textarea.childNodes[0]);
 	console.log (privates.textarea);
     privates.engine = engine;
 
