@@ -12,7 +12,7 @@
         <link rel="stylesheet" href="css/style.css">
         <script src="js/vendor/modernizr-2.8.3.min.js"></script>
     </head>
-    <body>
+    <body class="experiment-page">
         <!--[if lt IE 8]>
             <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
@@ -30,6 +30,275 @@
             </div>
         </nav>
 
+		<div class="container-fluid">
+            <div class="row">
+                <div id="expt-info-container" class="col-md-3">
+					<div id="expt-title-container" class="instruction-border">
+						<h1>Copy-Paste Experiment</h1>
+						<hr>
+					</div>
+					<div id="expt-params-container" style="overflow-y:auto;">
+						<table id="expt-params-table" class="table table-bordered instruction-border">
+							<tbody>
+								<tr>
+									<td>Technique</td>
+									<td><span class="js-expt-technique">ACP</span></td>
+								</tr>
+								<tr>
+									<td>Granularity</td>
+									<td><span class="js-expt-granularity">Phrase</span></td>
+								</tr>
+								<tr>
+									<td>Layout</td>
+									<td><span class="js-expt-layout">Unformatted</span></td>
+								</tr>
+								<tr>
+									<td>Trial</td>
+									<td><span class="js-expt-current-trial"></span> / <span class="js-expt-num-trials"></span></td>
+								</tr>
+							</tbody>
+						</table>
+						<p id="expt-instructions" class="expt-instructions instruction-border">Please copy-paste the following <span class="js-expt-granularity">phrase</span> using the <span class="js-expt-technique">AUTOCOMPASTE</span> technique from one of the open windows into the <span class="js-expt-layout">UNFORMATTED</span> text editor layout.</p>
+						<div id="stimuli-container" class="stimuli-container instruction-border">
+							<div id="stimuli" class="alert alert-danger js-expt-stimuli">This is a long stimuli!</div>
+						</div>
+					</div>
+					<button class="btn btn-primary btn-lg" onclick="next()">Next Task</button>
+					<!--<form class="form-inline">
+                        <button type="submit" class="btn btn-primary btn-lg">Skip to Experiment</button>
+                    </form>-->
+                </div>
+                <div id="autocompaste" class="col-sm-9">
+                    <div id="autocompaste-display" class="instruction-border"></div>
+                </div>
+            </div>
+        </div>
+		
+		<div id="instructions-blurb">
+			<div id="instruction-text" style="color:#8a6d3b;">
+				Hello
+			</div>
+			<button class="btn btn-primary btn-lg" onclick="nextInstruction()" style="float:right;">Next</button>
+			<form class="form-inline"></form>
+		</div>
+
+        <script src="js/vendor/jquery-1.11.2.min.js"></script>
+        <script src="js/plugins.js"></script>
+        <script src="js/main.js"></script>
+        <script src="js/WindowManager.js"></script>
+        <script src="js/autocompaste/engine.js"></script>
+        <script src="js/autocompaste/interface.js"></script>
+        <script src="js/autocompaste/editor.js"></script>
+        <script src="js/autocompaste/autocompaste.js"></script>
+        <script src="js/DataStorage.js"></script>
+        <script src="js/ACPToolKit.js"></script>
+
+        <script>
+
+			var currentInstruction;
+			var totalNumberOfInstructions;
+			var instructionsData = [
+				{
+					'html' : '\
+						<p>Dear participant <span class="js-pid pid"></span>,</p> \
+						<p>Thank you for joining in this experiment to test a new copy-and-paste technique called <strong>AutoComPaste</strong> that \
+						allows users (you!) to copy-and-paste sentences and paragraphs in a manner different from the traditional \
+						copy-paste techniques (such as Ctrl-C, Ctrl-V). Data collected from the experiment will help us to <strong>evaluate the \
+						performance of this new technique</strong> against the traditional copy-paste technique.</p> \
+						<p>Follow the Yellow Blurb Road to familiarise yourself with the experiment environment, and run some practice trials to get a feel of AutoComPaste!</p> \
+					',
+					'elementToAppend' : '#expt-title-container',
+					'left' : false,
+					'bottom' : false,
+					'inside' : false
+				},
+				{
+					'html' : '\
+						<p>Here you will find the parameters of the task at hand:</p> \
+						<p>The <strong>technique</strong> indicates which technique you will <strong>employ to complete the task.</strong></p> \
+						<p>The <strong>granularity</strong> indicates the <strong>type of text excerpt</strong> you will need to copy paste with the respective technique. For example, a complete paragraph or a phrase from a sentence.</p> \
+						<p>The <strong>layout</strong> indicates the <strong>formatting of the text</strong> – certain tasks require you to copy and paste data into table cells.</p> \
+						<p>The current trial is shown along with the number of trials remaining.</p> \
+					',
+					'elementToAppend' : '#expt-params-table',
+					'left' : false,
+					'bottom' : false,
+					'inside' : false
+				},
+				{
+					'html' : '\
+						<p>Instructions for the task at hand; a linguistic interpretation of the table above!</p> \
+					',
+					'elementToAppend' : '#expt-instructions',
+					'left' : false,
+					'bottom' : false,
+					'inside' : false
+				},
+				{
+					'html' : '\
+						<p>The <strong>content you are required to copy and paste</strong> from the Text Windows to complete the task at hand will be shown here as the <strong>stimuli</strong>.</p> \
+						<p>Try to <strong>match exactly the contents of what you have copy and pasted</strong> into the Text Editor with the text excerpts shown here!</p> \
+					',
+					'elementToAppend' : '#stimuli-container',
+					'left' : false,
+					'bottom' : false,
+					'inside' : false
+				},
+				{
+					'html' : '\
+						<p>Within this section you will find several windows, one of which is the <strong>Text Editor where you will use the techniques</strong>, and the rest which are <strong>Text Windows which contain articles</strong>.</p> \
+						<p>Each of these windows can be <strong>moved around freely by dragging the respective title bars</strong> and arranged as you like. Give it a shot!</p> \
+						<p>The <strong>text excerpt will always be extracted from an article</strong> in one of these Text Windows, and will also be <strong>highlighted in the corresponding Text Window</strong> from which it is excerpted from.</p> \
+						<p>Try finding the source article for the current task\'s text excerpt!</p> \
+					',
+					'elementToAppend' : '#autocompaste-display',
+					'left' : false,
+					'bottom' : false,
+					'inside' : true
+				},
+				{
+					'html' : '\
+						<p>The <strong>content you are required to copy and paste</strong> from the Text Windows to complete the task at hand will be shown here.</p> \
+						<p>Try to <strong>match exactly the contents of what you have copy and pasted</strong> into the Text Editor with the text excerpts shown here!</p> \
+					',
+					'elementToAppend' : '.wm-window:contains("Text Editor") > .modal-content',
+					'left' : false,
+					'bottom' : false,
+					'inside' : false
+				},
+				{
+					'html' : '\
+						<p></p> \
+						<p>Trhe Text Editor with the text excerpts shown here!</p> \
+					',
+					'elementToAppend' : '#stimuli-container',
+					'left' : false,
+					'bottom' : false,
+					'inside' : false
+				}
+			];
+			
+            var trialsData;
+            var currentTrial;
+            var totalNumberOfTrials;
+            var pid;
+			
+			function nextInstruction ( previous ) {
+				if ( typeof previous == "undefined" )
+				{
+					if (currentInstruction < totalNumberOfInstructions) {
+						$('#instruction-text').html ( instructionsData[currentInstruction].html );
+						$('.pid').text ( pid );
+						attachBlurb ( instructionsData[currentInstruction].elementToAppend,
+							instructionsData[currentInstruction].bottom,
+							instructionsData[currentInstruction].left,
+							instructionsData[currentInstruction].inside );
+						
+						$(instructionsData[currentInstruction].elementToAppend).addClass ( 'instruction-border-shown' );
+						if ( currentInstruction > 0 )
+						{
+							$(instructionsData[currentInstruction - 1].elementToAppend).removeClass ( 'instruction-border-shown' );
+						}
+						
+						currentInstruction += 1;
+					} else {
+						// Last trial completed
+						$('form').submit();
+					}
+				}
+            }
+			
+			function attachBlurb ( targetElementSelector, bottom, left, inside ) {
+				if ( typeof left == 'undefined' )
+					left = false;
+					
+				if ( typeof bottom == 'undefined' )
+					bottom = false;
+					
+				if ( typeof inside == 'undefined' )
+					inside = false;
+			
+                var viewportOffset = $(targetElementSelector)[0].getBoundingClientRect();
+				
+				var topVal = viewportOffset.top;
+				var leftVal = viewportOffset.left;
+				var rightVal = viewportOffset.right;
+				var botVal = viewportOffset.bottom;
+				
+				var css = {};
+				
+				if ( left )
+					css.left = leftVal - $('#instructions-blurb')[0].getBoundingClientRect().width;
+				else
+					css.left = rightVal;
+				
+				if ( bottom )
+					css.top = topVal - $('#instructions-blurb').height;
+				else
+					css.top = topVal;
+					
+				if ( inside )
+				{
+					css.left = leftVal;
+					css.top = botVal - $('#instructions-blurb')[0].getBoundingClientRect().height;
+				}
+				
+				$('#instructions-blurb').css(css);
+            }
+			
+			$(function () {
+                $('form').submit(function (event) {
+                    event.preventDefault();
+                    window.location = 'experiment.html';
+                });
+            });
+			
+            function next () {
+                if (currentTrial < totalNumberOfTrials) {
+                    ACPToolKit.presentTrial(trialsData[currentTrial]);
+					$('.wm-window > .modal-content').addClass ('instruction-border');
+                    currentTrial += 1;
+                    $('.js-expt-current-trial').text(currentTrial);
+                } else {
+                    // Last trial completed
+                }
+            }
+
+            $(document).ready(function () {
+				currentInstruction = 0;
+				totalNumberOfInstructions = instructionsData.length;
+			
+                $.get('data/trials.json', function (data) {
+                    trialsData = data.trials;
+                    currentTrial = 0;
+                    totalNumberOfTrials = trialsData.length;
+                    $('.js-expt-num-trials').text(totalNumberOfTrials);
+                    next();
+                    pid = ACPToolKit.getCurrentParticipantId();
+					nextInstruction();
+                });
+				
+				$('#expt-params-container').css(
+					'height',
+					$('#expt-info-container').height() - $('#expt-title-container').height()
+				);
+
+				$(window).resize(function () {
+					$('#expt-params-container').css(
+						'height',
+						$('#expt-info-container').height() - $('#expt-title-container').height()
+					);
+				});
+
+				window.setInterval ( function() {
+					attachBlurb ( instructionsData[currentInstruction-1].elementToAppend,
+						instructionsData[currentInstruction-1].bottom,
+						instructionsData[currentInstruction-1].left,
+						instructionsData[currentInstruction-1].inside );
+				}, 100);
+            });
+        </script>
+		<!--
         <div class="container">
             <div class="row">
                 <div class="col-md-8 col-md-offset-2">
@@ -37,7 +306,7 @@
                     <hr>
                     <p>Dear participant <span class="js-pid pid"></span>, please read the instructions before the experiment.
 
-                    <p>There should always be an instruction before doing the actual evaluation of the interface.<p>
+                    <p class="test-me instruction-border">There should always be an instruction before doing the actual evaluation of the interface.<p>
                     <p>Enter your instructions to your participant here. Diagrams and screenshots will be very helpful!</p>
 
                     <form class="form-inline">
@@ -46,7 +315,6 @@
                 </div>
             </div>
         </div>
-
         <script src="js/vendor/jquery-1.11.2.min.js"></script>
         <script src="js/plugins.js"></script>
         <script src="js/DataStorage.js"></script>
@@ -60,6 +328,20 @@
                     window.location = 'experiment.html';
                 });
             });
+			
+			$(document).ready(function () {
+                $('.test-me').click ( function () {
+					if ( !$(this).hasClass ( 'instruction-border-shown' ) )
+					{
+						$(this).addClass ( 'instruction-border-shown' );
+					}
+					else
+					{
+						$(this).removeClass ( 'instruction-border-shown' );
+					}
+				});
+            });
         </script>
+		-->
     </body>
 </html>

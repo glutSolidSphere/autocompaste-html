@@ -70,7 +70,7 @@ var ACPToolKit = (function () {
         }
     });
 
-    if (window.location.pathname.indexOf('experiment') > -1) {
+    if (window.location.pathname.indexOf('experiment') > -1 || window.location.pathname.indexOf('instructions') > -1) {
         var wm = new WindowManager('autocompaste-display');
         var currentTrialOptions = null;
         var startTime = null;
@@ -84,7 +84,33 @@ var ACPToolKit = (function () {
 
             $('.js-expt-technique').text(options.technique);
             $('.js-expt-granularity').text(options.granularity);
-            $('.js-expt-stimuli').text(options.stimuli);
+			$('.js-expt-layout').text(options.layout);
+			
+			$('.stimuli-container').html('');
+			if ( typeof options.stimuli === "string" )
+			{
+				var stimuliNewLine = $( document.createElement ('div') ).
+										addClass('alert alert-danger js-expt-stimuli')
+										.text(options.stimuli);
+				$( '.stimuli-container' ).append ( stimuliNewLine );
+			}
+			else
+			{
+				for ( var key in options.stimuli )
+				{
+					if (options.stimuli.hasOwnProperty(key))
+					{
+						var stimuliNewLine = $( document.createElement ('div') ).
+										addClass('alert alert-danger js-expt-stimuli')
+										.data( 'tableIndex', key )
+										.text(options.stimuli[key])
+										.prepend($(document.createElement('strong'))
+												.addClass('table-enum')
+												.text(key));
+						$( '.stimuli-container' ).append ( stimuliNewLine );
+					}
+				}
+			}
 
             // Clean up DOM
             wm.destroyAllWindows();
@@ -103,12 +129,26 @@ var ACPToolKit = (function () {
                     var engine = new AutoComPaste.Engine();
                     break;
             }
+			
+			console.log (options);
 
-            var iface = new AutoComPaste.Interface(wm, engine, data_file);
+            var iface = new AutoComPaste.Interface(wm, engine, data_file, options.layout);
 
             // Highlight the relevant text.
             iface.addEventListener('loaded', function () {
-                var lines_to_highlight = stimuli.split("\n\n");
+				if ( typeof stimuli === "string" )
+				{
+					var lines_to_highlight = stimuli.split("\n\n");
+				}
+				else
+				{
+					var lines_to_highlight = [];
+					for ( var key in stimuli ) {
+						if (stimuli.hasOwnProperty(key)) {
+							lines_to_highlight.push (stimuli[key]);
+						}
+					}
+				}
 
                 var windows = wm.getWindowList();
                 for (var i = 0; i < windows.length; i++) {

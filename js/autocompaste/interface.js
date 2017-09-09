@@ -33,7 +33,7 @@ AutoComPaste.Interface = (function () {
   /**
    * The class constructor.
    */
-  function Interface (wm, engine, texts_json) {
+  function Interface (wm, engine, texts_json, table_format) {
     /** Internal functions */
     this._showError = function _showerror() {
       document.getElementById('error-overlay').style.display = 'block';
@@ -117,14 +117,72 @@ AutoComPaste.Interface = (function () {
           }
         }
 
-        // Create a text editor window.
-        var acp_textarea = $(document.createElement('div'))
-							.append(document.createElement('textarea'))
-                            .addClass('autocompaste-textarea')
-                            .attr({
-                              rows: 10,
-                              cols: 40
-                            });
+		switch ( privates.table_format )
+		{
+			case 'UNFORMATTED':
+				var acp_textarea = $(document.createElement('div'))
+							.append($(document.createElement('textarea'))
+								.addClass('autocompaste-textarea')
+								.attr({
+								  rows: 10,
+								  cols: 50
+								}));
+				break;
+			default:
+				var table_size = 3;
+				var rows = 5;
+				var cols = 20;
+				var header_top = 'A';
+				
+				var acp_textarea = $(document.createElement('table'))
+							.addClass('autocompaste-table');
+				
+				//Create the table top headers.
+				var acp_textarea_row = $(document.createElement('tr'));
+				acp_textarea_row.append($(document.createElement('th')));
+				for ( var j = 0; j < table_size; j++ )
+				{
+					acp_textarea_row.append($(document.createElement('th'))
+												.append($(document.createElement('div'))
+													.addClass('autocompaste-table-top-header')
+													.text(header_top)));
+					header_top = String.fromCharCode(header_top.charCodeAt() + 1)
+				}
+				acp_textarea.append(acp_textarea_row);
+				
+				for ( var i = 0; i < table_size; i++ )
+				{
+					acp_textarea_row = $(document.createElement('tr'));
+					
+					//Create the table left headers.
+					acp_textarea_row.append($(document.createElement('td'))
+											.append($(document.createElement('div'))
+												.addClass('autocompaste-table-side-header')
+												.text(i + 1)));
+												
+					for ( var j = 0; j < table_size; j++ )
+					{
+						acp_textarea_row.append($(document.createElement('td'))
+													.append($(document.createElement('textarea'))
+														.addClass('autocompaste-textarea')
+														.attr({
+														  rows: rows,
+														  cols: cols
+														})));
+					}
+					acp_textarea.append(acp_textarea_row);
+				}
+				break;
+		}
+		
+		
+        /**/
+		/*var acp_textarea = $(document.createElement('textarea'))
+		.addClass('autocompaste-textarea')
+		.attr({
+		  rows: 10,
+		  cols: 40
+		});*/
 
         //  For ACP mode, engine is passed into the interface. 
         //  Initialize the interface with the engine.
@@ -243,6 +301,7 @@ AutoComPaste.Interface = (function () {
     privates.events = { };
     privates.engine = engine;
     privates.wm = wm;
+	privates.table_format = table_format;
     
     // Fetch all the texts.
     this._fetchTexts();

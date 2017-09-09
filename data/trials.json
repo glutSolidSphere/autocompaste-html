@@ -1,5 +1,5 @@
 {
-    "experiments": [
+    "trials": [
         { 
             "technique": "AUTOCOMPASTE", 
             "granularity": "sentence",
@@ -19,17 +19,6 @@
 			}
         },
         { 
-            "technique": "AUTOCOMPASTE", 
-            "granularity": "phrase",
-			"layout":"FULL TABLE",
-            "data_file": "data/texts.json",
-            "stimuli": {
-				"A1" : "passes an AC signal while blocking",
-				"A2" : "operate on either an AC or DC",
-				"A3" : "mechanical energy into AC"
-			}
-        },
-        { 
             "technique": "TRADITIONAL", 
             "granularity": "sentence",
 			"layout":"UNFORMATTED",
@@ -46,17 +35,6 @@
 				"A2" : "What is AC/DC? Equipment that will operate on either an AC or DC power source.",
 				"A3" : "What is AC generator? Device used to transform mechanical energy into AC electrical power."
 			}
-        },
-        { 
-            "technique": "TRADITIONAL", 
-            "granularity": "phrase",
-			"layout":"FULL TABLE",
-            "data_file": "data/texts.json",
-			"stimuli": {
-				"A1" : "passes an AC signal while blocking",
-				"A2" : "operate on either an AC or DC",
-				"A3" : "mechanical energy into AC"
-			}
-        }        
+        }
     ]
 }

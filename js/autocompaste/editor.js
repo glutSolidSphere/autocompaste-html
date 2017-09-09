@@ -296,6 +296,7 @@ AutoComPaste.Editor = (function () {
      * @return {Object} An object containing the current caret position.
      */
     this._getCaretYPosition = function _getCaretYPosition () {
+	  var textarea = privates.textarea;
       // TODO: Improve performance of this.
       // Locate the stuff before the caret.
       var text_before_caret = privates.textarea.value.substring(0, privates.textarea.selectionStart);
@@ -369,6 +370,7 @@ AutoComPaste.Editor = (function () {
      * @return {String}
      */
     this._getCurrentSentence = function _getCurrentSentence () {
+	  var textarea = privates.textarea;
       var bounds = this._getCurrentSentenceBounds ();
       if (bounds == undefined) {
         return bounds;
@@ -562,8 +564,11 @@ AutoComPaste.Editor = (function () {
     }
 
     if (!(textarea instanceof HTMLTextAreaElement)) {
-      console.error("Editor: textarea must be a HTML textarea or a " +
-          "corresponding wrapped jQuery object.");
+	  if ($(textarea).has( "textarea" ).length === 0)
+	  {
+        console.error("Editor: textarea must be a HTML textarea or a " +
+            "corresponding wrapped jQuery object.");
+	  }
     }
 
     if (engine == undefined) {
@@ -602,7 +607,10 @@ AutoComPaste.Editor = (function () {
     };
 
     /** Private variables */
-    privates.textarea = $(textarea.childNodes[0])[0];
+	privates.all_textarea = $(textarea).find('textarea');
+	console.log (privates.all_textarea);
+    privates.textarea = privates.all_textarea[0];
+	console.log (privates.textarea);
     privates.engine = engine;
 
     privates.clist_max_width = 300;
@@ -617,6 +625,142 @@ AutoComPaste.Editor = (function () {
 
     // Set up events for the textarea box.
     var editor = this;
+	
+	privates.all_textarea.each ( function ( index ) {
+		$(this)[0].addEventListener ( 'focus', function () {
+			privates.textarea = $(this)[0];
+		});
+		
+		$(this)[0].addEventListener('input', function (input_event) {
+			// Identify the current sentence.
+			var sentence = editor._getCurrentSentence();
+			if (sentence != undefined) {
+				// Search for suggestions.
+				privates.clist_suggestions = privates.engine.search(sentence.trim());
+
+				// Move the completion box to the correct location.
+				var position = editor._getCaretPosition();
+				var offset = $(this).offset();
+
+				$('#autocompaste-completion').css({
+				  left: (position.x + offset.left) + 'px',
+				  top: (position.y + offset.top) + 'px'
+				});
+
+				// Populate completion list with suggestions.
+				editor._fillCompletionList(privates.clist_suggestions);
+			} else {
+				editor._hideCompletionList();
+			}
+
+		}, false);
+		
+		$(this)[0].addEventListener('keydown', function (keydown_event) {
+		  if (privates.clist_shown) {
+			if (!/^(38|40|27|13|37|39|9)$/.test(keydown_event.keyCode)) {
+			  return;
+			}
+
+			// Escaping!
+			if (keydown_event.keyCode == 27) {
+			  editor._hideCompletionList();
+			  return;
+			}
+
+			// Enter is pressed...
+			if (keydown_event.keyCode == 13) {
+			  editor._completeWithFocusedItem();
+			}
+
+			// Going down!
+			// Down, right and tab.
+			if (/^(40|37)$/.test (keydown_event.keyCode) ||
+				(keydown_event.keyCode == 9 && !keydown_event.shiftKey)) {
+			  editor._focusOnCompletionListItem (++privates.clist_focused_item);
+
+			  var clist_ul = $(privates.clist).find('ul')[0];
+			  var items = $(privates.clist).find('a');
+			  var item = items[privates.clist_focused_item];
+			  clist_ul.scrollTop = item.offsetTop - ($(clist_ul).height() / 2);
+			}
+
+			// Going up (or left)!
+			if (/^(38|39)$/.test (keydown_event.keyCode) ||
+				(keydown_event.keyCode == 9 && keydown_event.shiftKey)) {
+			  editor._focusOnCompletionListItem (--privates.clist_focused_item);
+			  
+			  var clist_ul = $(privates.clist).find('ul')[0];
+			  var items = $(privates.clist).find('a');
+			  var item = items[privates.clist_focused_item];
+			  clist_ul.scrollTop = item.offsetTop - ($(clist_ul).height() / 2);
+			}
+
+			// Don't move the textbox caret!
+			keydown_event.preventDefault();
+
+		  } else {
+			if (!/^(37|39)$/.test(keydown_event.keyCode)) {
+			  return;
+			}
+
+			// Pressing right when the list is not shown triggers sentence
+			// completion mode.
+			if (keydown_event.keyCode == 39 && privates.clist_next != undefined) {
+			  var textarea = privates.textarea;
+			  var caret_position = textarea.selectionStart;
+
+			  // Save current version to the insertion stack.
+			  privates.clist_append_start = textarea.value.length;
+			  privates.clist_append_stack.push({
+				value: textarea.value,
+				caret_position: caret_position
+			  });
+
+			  // Append next sentence.
+			  var new_value = textarea.value.substring (0, caret_position) +
+								privates.clist_next.sentence + ' ' +
+								textarea.value.substring(caret_position);
+
+			  textarea.value = new_value;
+			  caret_position += privates.clist_next.sentence.length + 1; // +1 for the space
+			  textarea.setSelectionRange(caret_position, caret_position);
+
+			  // Look up the next sentence.
+			  privates.clist_next = privates.engine.getSentenceFromIndex(
+				privates.clist_next.id,
+				++privates.clist_next.index
+			  );
+			  
+			  keydown_event.preventDefault();
+			}
+
+			// Pressing left when the list is not shown triggers sentence
+			// completion undo mode.
+			if (keydown_event.keyCode == 37) {
+			  if (privates.clist_append_stack.length > 0) {
+				var textarea = privates.textarea;
+				var append_info = privates.clist_append_stack.pop();
+				textarea.value = append_info.value;
+				textarea.setSelectionRange(append_info.caret_position, append_info.caret_position);
+				
+				// Look up the previous sentence.
+				privates.clist_next = privates.engine.getSentenceFromIndex(
+				  privates.clist_next.id,
+				  --privates.clist_next.index
+				);
+
+				keydown_event.preventDefault();
+
+			  } else {
+				privates.clist_next = undefined;
+				privates.clist_append_start = -1;
+			  }
+			}
+		  }
+		});
+	});
+	
+	/*
     privates.textarea.addEventListener('input', function (input_event) {
       // Identify the current sentence.
       var sentence = editor._getCurrentSentence();
@@ -744,7 +888,8 @@ AutoComPaste.Editor = (function () {
         }
       }
     });
-
+	*/
+	
     // Add the autocompletion box into the DOM.
     $(document.body).append(privates.clist);
   };

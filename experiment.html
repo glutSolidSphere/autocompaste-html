@@ -32,32 +32,38 @@
 
         <div class="container-fluid">
             <div class="row">
-                <div class="col-md-3">
-                    <h1>Copy-Paste Experiment</h1>
-                    <hr>
-                    <table class="table table-bordered">
-                        <tbody>
-                            <tr>
-                                <td>Technique</td>
-                                <td><span class="js-expt-technique">ACP</span></td>
-                            </tr>
-                            <tr>
-                                <td>Granularity</td>
-                                <td><span class="js-expt-granularity">Phrase</span></td>
-                            </tr>
-                            <tr>
-                                <td>Independent Variable 3</td>
-                                <td>???</td>
-                            </tr>
-                            <tr>
-                                <td>Trial</td>
-                                <td><span class="js-expt-current-trial"></span> / <span class="js-expt-num-trials"></span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <p>Please copy-paste the following <span class="js-expt-granularity">phrase</span> using the <span class="js-expt-technique">AUTOCOMPASTE</span> technique from one of the open windows.</p>
-                    <div id="stimuli" class="alert alert-danger js-expt-stimuli">This is a long stimuli!</div>
-                    <button class="btn btn-primary btn-lg" onclick="next()">Next Task</button>
+                <div id="expt-info-container" class="col-md-3">
+					<div id="expt-title-container">
+						<h1>Copy-Paste Experiment</h1>
+						<hr>
+					</div>
+					<div id="expt-params-container" style="overflow-y:auto;">
+						<table class="table table-bordered">
+							<tbody>
+								<tr>
+									<td>Technique</td>
+									<td><span class="js-expt-technique">ACP</span></td>
+								</tr>
+								<tr>
+									<td>Granularity</td>
+									<td><span class="js-expt-granularity">Phrase</span></td>
+								</tr>
+								<tr>
+									<td>Layout</td>
+									<td><span class="js-expt-layout">Unformatted</span></td>
+								</tr>
+								<tr>
+									<td>Trial</td>
+									<td><span class="js-expt-current-trial"></span> / <span class="js-expt-num-trials"></span></td>
+								</tr>
+							</tbody>
+						</table>
+						<p class="expt-instructions">Please copy-paste the following <span class="js-expt-granularity">phrase</span> using the <span class="js-expt-technique">AUTOCOMPASTE</span> technique from one of the open windows into the <span class="js-expt-layout">UNFORMATTED</span> text layout.</p>
+						<div class="stimuli-container">
+							<div id="stimuli" class="alert alert-danger js-expt-stimuli">This is a long stimuli!</div>
+						</div>
+					</div>
+					<button class="btn btn-primary btn-lg" onclick="next()">Next Task</button>
                 </div>
                 <div id="autocompaste" class="col-sm-9">
                     <div id="autocompaste-display"></div>
@@ -81,7 +87,7 @@
             var trialsData;
             var currentTrial;
             var totalNumberOfTrials;
-            var headers = ['Participant id', 'Technique', 'Granularity',
+            var headers = ['Participant id', 'Technique', 'Granularity', 'Layout',
                             'Trial no', 'Stimuli', 'User Response', 'Trial Start Time',
                             'Trial End Time', 'Trial Time', 'Accuracy'];
             var trialData = [];
@@ -108,6 +114,7 @@
                 }
 
                 if (currentTrial < totalNumberOfTrials) {
+					console.log (trialsData);
                     ACPToolKit.presentTrial(trialsData[currentTrial]);
                     currentTrial += 1;
                     $('.js-expt-current-trial').text(currentTrial);
@@ -127,7 +134,19 @@
                     trialData.push(headers);
                     next();
                     pid = ACPToolKit.getCurrentParticipantId();
-                })
+                });
+				
+				$('#expt-params-container').css(
+					'height',
+					$('#expt-info-container').height() - $('#expt-title-container').height()
+				);
+
+				$(window).resize(function () {
+					$('#expt-params-container').css(
+						'height',
+						$('#expt-info-container').height() - $('#expt-title-container').height()
+					);
+				});
             });
         </script>
     </body>
